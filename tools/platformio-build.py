@@ -70,35 +70,43 @@ def process_standard_library_configuration(cpp_defines):
     if "PIO_FRAMEWORK_ARDUINO_NANOLIB_FLOAT_SCANF" in cpp_defines:
         env.Append(LINKFLAGS=["-u_scanf_float"])
 
-
-def process_usart_configuration(cpp_defines):
-    if "PIO_FRAMEWORK_ARDUINO_SERIAL_DISABLED" in cpp_defines:
-        env["CPPDEFINES"].remove("HAL_UART_MODULE_ENABLED")
-
-    elif "PIO_FRAMEWORK_ARDUINO_SERIAL_WITHOUT_GENERIC" in cpp_defines:
-        env.Append(CPPDEFINES=["HWSERIAL_NONE"])
-
-
-def process_usb_speed_configuration(cpp_defines):
-    if "PIO_FRAMEWORK_ARDUINO_USB_HIGHSPEED" in cpp_defines:
-        env.Append(CPPDEFINES=["USE_USB_HS"])
-
-    elif "PIO_FRAMEWORK_ARDUINO_USB_HIGHSPEED_FULLMODE" in cpp_defines:
-        env.Append(CPPDEFINES=["USE_USB_HS", "USE_USB_HS_IN_FS"])
-
-
 def process_usb_configuration(cpp_defines):
+    # Serial
     if "PIO_FRAMEWORK_ARDUINO_ENABLE_CDC" in cpp_defines:
-        env.Append(CPPDEFINES=["USBD_USE_CDC"])
+        env.Append(CPPDEFINES=[("USB_TYPE", "USB_TYPE_CDC")])
+    # Serial + Mass Storage
+    elif "PIO_FRAMEWORK_ARDUINO_ENABLE_CDC_AND_MSC" in cpp_defines:
+        env.Append(CPPDEFINES=[("USB_TYPE","USB_TYPE_CDC_MSC")])
+    # Serial + Keyboard + Mouse
+    elif "PIO_FRAMEWORK_ARDUINO_ENABLE_CDC_AND_HID" in cpp_defines:
+        env.Append(CPPDEFINES=[("USB_TYPE","USB_TYPE_CDC_HID")])
+    # Serial + Mass Storage + Keyboard + Mouse
+    elif "PIO_FRAMEWORK_ARDUINO_ENABLE_CDC_AND_MSC_AND_HID" in cpp_defines:
+        env.Append(CPPDEFINES=[("USB_TYPE","USB_TYPE_CDC_MSC_HID")])
+    # No USB
+    else:
+        env.Append(CPPDEFINES=[("USB_TYPE","USB_TYPE_NONE")])
 
-    elif "PIO_FRAMEWORK_ARDUINO_ENABLE_CDC_WITHOUT_SERIAL" in cpp_defines:
-        env.Append(CPPDEFINES=["USBD_USE_CDC", "DISABLE_GENERIC_SERIALUSB"])
+# build.dosfs_flags=-DDOSFS_SDCARD={build.dosfs_sdcard} -DDOSFS_SFLASH={build.dosfs_sflash}
+def process_dosfs_configuration(cpp_defines):
+    # default "None" config
+    dosfs_sdcard = 0
+    dosfs_sflash = 0
+    # SFLASH (QSPI)
+    if "PIO_FRAMEWORK_ARDUINO_DOSFS_SFLASH_QSPI" in cpp_defines:
+        dosfs_sdcard, dosfs_sflash = (0, 2)
+    # SDCARD (SPI)
+    elif "PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SPI" in cpp_defines:
+        dosfs_sdcard, dosfs_sflash = (1, 0)
+    # SDCARD (SDIO Default Speed)
+    elif "PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SDIO_DEFAULT_SPEED" in cpp_defines:
+        dosfs_sdcard, dosfs_sflash = (2, 0)
+    # SDCARD (SDIO High Speed)
+    elif "PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SDIO_HIGH_SPEED" in cpp_defines:
+        dosfs_sdcard, dosfs_sflash = (3, 0)
 
-    elif "PIO_FRAMEWORK_ARDUINO_ENABLE_HID" in cpp_defines:
-        env.Append(CPPDEFINES=["USBD_USE_HID_COMPOSITE"])
-
-    if any(f in env["CPPDEFINES"] for f in ("USBD_USE_CDC", "USBD_USE_HID_COMPOSITE")):
-        env.Append(CPPDEFINES=["HAL_PCD_MODULE_ENABLED"])
+    env.Append(CPPDEFINES=[("DOSFS_SDCARD",dosfs_sdcard)])
+    env.Append(CPPDEFINES=[("DOSFS_SFLASH",dosfs_sflash)])
 
 
 def get_arm_math_lib(cpu):
@@ -154,11 +162,15 @@ env.Append(
         "-fno-rtti",
         "-fno-exceptions",
         "-fno-use-cxa-atexit",
+        "-fsingle-precision-constant",
+        "-mabi=aapcs"
     ],
     CCFLAGS=[
         "-Os",  # optimize for size
         "-mcpu=%s" % env.BoardConfig().get("build.cpu"),
         "-mthumb",
+        "-mabi=aapcs",
+        "-fsingle-precision-constant",
         "-ffunction-sections",  # place each function in its own section
         "-fdata-sections",
         "-Wall",
@@ -260,8 +272,7 @@ cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
 
 process_standard_library_configuration(cpp_defines)
 process_usb_configuration(cpp_defines)
-process_usb_speed_configuration(cpp_defines)
-process_usart_configuration(cpp_defines)
+process_dosfs_configuration(cpp_defines)
 
 # copy CCFLAGS to ASFLAGS (-x assembler-with-cpp mode)
 env.Append(ASFLAGS=env.get("CCFLAGS", [])[:])
@@ -286,4 +297,7 @@ env.BuildSources(
     join("$BUILD_DIR", "FrameworkArduino"), join(FRAMEWORK_DIR, "cores", "stm32l4")
 )
 
+# CMSIS Device folder is not built because it's in the precompiled binary
+
+#libraries
 env.Prepend(LIBS=libs)
