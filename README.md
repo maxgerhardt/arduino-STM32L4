@@ -1,5 +1,45 @@
 # Arduino Core for STM32L4 based boards
 
+## PlatformIO integration 
+
+If you wish to use this core using PlatformIO, create a new PlatformIO with any board. Then edit the `platformio.ini` so that it points to the modified `ststm32` platform and this package. An example project is given at https://github.com/maxgerhardt/pio-stm32l4core-example. 
+
+Available boards: 
+* dragonfly_l496rg
+* dragonfly_l476re
+* butterfly_l433cc
+* ladybug_l432kc
+* grumpyoldpizza_nucleo_l432kc
+* grumpyoldpizza_nucleo_l476rg
+
+Further configuration options for clock speed, USB support and DOSFS can be activated by modifying the `platformio.ini` 
+
+### Clock speed
+
+Add the changed value via
+
+```
+board_build.f_cpu = 80000000L
+```
+
+as e.g. shown in [docs](https://docs.platformio.org/en/latest/boards/ststm32/nucleo_l476rg.html#configuration). 
+
+### USB
+Add a `-D <flag>` to the `build_flags = ..` list in the `platformio.ini`. Supported flags are: 
+
+* Serial / USB CDC: `PIO_FRAMEWORK_ARDUINO_ENABLE_CDC`
+* Serial + Mass Storage: `PIO_FRAMEWORK_ARDUINO_ENABLE_CDC_AND_MSC`
+* Serial + Keyboard + Mouse: `PIO_FRAMEWORK_ARDUINO_ENABLE_CDC_AND_HID`
+* Serial + Mass Storage + Keyboard + Mouse: `PIO_FRAMEWORK_ARDUINO_ENABLE_CDC_AND_MSC_AND_HID`
+
+Not setting any special flag will result in the "No USB" setting.
+
+### DOSFS
+* SFLASH (QSPI): `PIO_FRAMEWORK_ARDUINO_DOSFS_SFLASH_QSPI`
+* SDCARD (SPI): `PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SPI`
+* SDCARD (SDIO Default Speed):`PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SDIO_DEFAULT_SPEED`
+* SDCARD (SDIO High Speed): `PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SDIO_HIGH_SPEED`
+
 ## Supported boards
 
 ### Tlera Corp
