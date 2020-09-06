@@ -19,7 +19,7 @@ Arduino Wiring-based Framework allows writing cross-platform software to
 control devices attached to a wide range of Arduino boards to create all
 kinds of creative coding, interactive objects, spaces or physical experiences.
 
-https://github.com/stm32duino/Arduino_Core_STM32
+https://github.com/maxgerhardt/arduino-STM32L4/ 
 """
 
 
@@ -50,17 +50,6 @@ variants_dir = (
 )
 variant_dir = join(variants_dir, variant)
 upload_protocol = env.subst("$UPLOAD_PROTOCOL")
-
-#print("Hello 2")
-#env.Exit(1)
-
-# TODO: USB
-# build.usb_flags=-DUSB_VID={build.vid} -DUSB_PID={build.pid} -DUSB_DID={build.did} '-DUSB_MANUFACTURER={build.usb_manufacturer}' '-DUSB_PRODUCT={build.usb_product}' '-DUSB_TYPE={build.usb_type}'
-
-# TODO: DOSFS
-# build.dosfs_flags=-DDOSFS_SDCARD={build.dosfs_sdcard} -DDOSFS_SFLASH={build.dosfs_sflash}
-
-#env.Exit(1)
 
 def process_standard_library_configuration(cpp_defines):
     if "PIO_FRAMEWORK_ARDUINO_STANDARD_LIB" in cpp_defines:
@@ -239,8 +228,8 @@ env.Append(
 if "build.usb_product" in board:
     env.Append(
         CPPDEFINES=[
-            ("USB_VID", board.get("build.hwids")[0][0]),
-            ("USB_PID", board.get("build.hwids")[0][1]),
+            ("USB_VID", board.get("build.hwids")[1][0]), # first VID,PID pair is reserved for DFU upload
+            ("USB_PID", board.get("build.hwids")[1][1]), # (needs static 0x0483:0xdf1)
             ("USB_DID", "0xffff"), # constant for every board
             ("USB_PRODUCT", '\\"%s\\"' %
              board.get("build.usb_product", "").replace('"', "")),
