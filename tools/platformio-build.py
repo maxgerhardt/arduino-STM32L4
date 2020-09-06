@@ -173,10 +173,10 @@ env.Append(
         "ARDUINO_%s" % board_name.upper(),
         ("BOARD_NAME", '\\"%s\\"' % board_name.upper()),
         "HAL_UART_MODULE_ENABLED",
-        ("_SYSTEM_CORE_CLOCK", clockspeed)
+        ("_SYSTEM_CORE_CLOCK_", clockspeed)
     ],
     CPPPATH=[
-        join(FRAMEWORK_DIR, "cores", "stm32l4", ),
+        join(FRAMEWORK_DIR, "cores", "stm32l4"),
         join(FRAMEWORK_DIR, "cores", "stm32l4", "avr"),
         join(FRAMEWORK_DIR, "system", "STM32L4xx", "Include"),
         join(CMSIS_DIR, "Include"),
@@ -215,7 +215,7 @@ env.Append(
     ],
     LIBS=[
         get_arm_math_lib(env.BoardConfig().get("build.cpu")),
-        mcu, # libstm32l432.a etc; lib name is nicely identical to mcu name
+        mcu_type[:-2], # libstm32l432.a etc; lib name can be deduced from mcu name.
         "c",
         "m",
         "gcc",
@@ -229,6 +229,7 @@ if "build.usb_product" in board:
         CPPDEFINES=[
             ("USB_VID", board.get("build.hwids")[0][0]),
             ("USB_PID", board.get("build.hwids")[0][1]),
+            ("USB_DID", "0xffff"), # constant for every board
             ("USB_PRODUCT", '\\"%s\\"' %
              board.get("build.usb_product", "").replace('"', "")),
             ("USB_MANUFACTURER", '\\"%s\\"' %
@@ -245,10 +246,11 @@ configure_application_offset(mcu, upload_protocol)
 #
 
 if not board.get("build.ldscript", ""):
-    env.Replace(LDSCRIPT_PATH=join(FRAMEWORK_DIR, "system", "ldscript.ld"))
-    if not isfile(join(env.subst(variant_dir), "ldscript.ld")):
+    ld_script_path = join(variant_dir, "linker_scripts", mcu_type.upper() + "_FLASH.ld")
+    env.Replace(LDSCRIPT_PATH=ld_script_path)
+    if not isfile(ld_script_path):
         print("Warning! Cannot find linker script for the current target!\n")
-    env.Append(LINKFLAGS=[("-Wl,--default-script", join(variant_dir, "ldscript.ld"))])
+    env.Append(LINKFLAGS=[("-Wl,--default-script", ld_script_path)])
 
 #
 # Process configuration flags
@@ -266,7 +268,6 @@ env.Append(ASFLAGS=env.get("CCFLAGS", [])[:])
 
 env.Append(
     LIBSOURCE_DIRS=[
-        join(FRAMEWORK_DIR, "libraries", "__cores__", "arduino"),
         join(FRAMEWORK_DIR, "libraries"),
     ]
 )
@@ -282,11 +283,7 @@ if "build.variant" in env.BoardConfig():
     env.BuildSources(join("$BUILD_DIR", "FrameworkArduinoVariant"), variant_dir)
 
 env.BuildSources(
-    join("$BUILD_DIR", "FrameworkArduino"), join(FRAMEWORK_DIR, "cores", "arduino")
-)
-
-env.BuildSources(
-    join("$BUILD_DIR", "SrcWrapper"), join(FRAMEWORK_DIR, "libraries", "SrcWrapper")
+    join("$BUILD_DIR", "FrameworkArduino"), join(FRAMEWORK_DIR, "cores", "stm32l4")
 )
 
 env.Prepend(LIBS=libs)
