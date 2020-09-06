@@ -1,0 +1,6 @@
+{
+    "description":"Arduino Wiring-based Framework (STM32L4 Core)",
+    "name":"framework-arduinoststm32-stm32l4",
+    "url":"https://github.com/GrumpyOldPizza/arduino-STM32L4",
+    "version":"1.000028.201809"
+}
