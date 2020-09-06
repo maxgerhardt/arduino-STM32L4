@@ -40,6 +40,19 @@ Not setting any special flag will result in the "No USB" setting.
 * SDCARD (SDIO Default Speed):`PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SDIO_DEFAULT_SPEED`
 * SDCARD (SDIO High Speed): `PIO_FRAMEWORK_ARDUINO_DOSFS_SDCARD_SDIO_HIGH_SPEED`
 
+### Example configuration:
+
+```ini
+[env:dragonfly_l476re]
+platform = https://github.com/maxgerhardt/platform-ststm32.git
+framework = arduino
+platform_packages = 
+     framework-arduinoststm32-stm32l4@https://github.com/maxgerhardt/arduino-STM32L4.git
+board = dragonfly_l476re
+build_flags = 
+    -D PIO_FRAMEWORK_ARDUINO_ENABLE_CDC
+```
+
 ## Supported boards
 
 ### Tlera Corp
